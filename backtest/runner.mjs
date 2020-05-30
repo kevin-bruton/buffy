@@ -11,9 +11,7 @@ import {getStrategy} from '../strategies/index.mjs'
  * 
  * @param {BackTestDef} backTestDef
  */
-async function backtestRunner(backTest) {
-  console.log('backTest', typeof backTest, typeof backTest.provider)
-  const {provider, selector, strategyName} = backTest
+async function backtestRunner({provider, selector, strategyName}) {
   const candles = getCandles({provider, selector})
 
   const strategy = await getStrategy(strategyName)
@@ -27,5 +25,3 @@ async function backtestRunner(backTest) {
 
   strategy.end()
 }
-
-backtestRunner()

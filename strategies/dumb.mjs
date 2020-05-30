@@ -1,15 +1,15 @@
-export default (function() {
+export default (() => {
+  let value = 0
   return {
     init: () => {
       console.log('run init')
-      // this.data = 'hi'
+      value = 1
     },
-    onTick: (candle) => {
-      // console.log('tick with candle', candle.timeDate)
+    onTick: candle => {
+      console.log('tick with candle', candle.timeDate)
     },
     end: () => {
-      console.log('finish')
-      // console.log(this)
+      console.log('finish', value)
     }
   }
 })()
