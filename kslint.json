@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "typescript-tslint-plugin",
+        "jsEnable": false
+      }
+    ]
+  }
+}

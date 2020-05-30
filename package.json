@@ -1,0 +1,21 @@
+{
+  "name": "buffy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kevin Bruton",
+  "license": "ISC",
+  "dependencies": {
+    "crypto-js": "^4.0.0",
+    "date-fns": "^2.12.0",
+    "node-fetch": "^2.6.0",
+    "request": "^2.88.2",
+    "sqlite3": "^4.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0"
+  }
+}
