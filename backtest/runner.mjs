@@ -18,7 +18,7 @@ async function backtestRunner({provider, selector, strategyName}) {
   
   strategy.init()
 
-  for(let i = 0; i < candles.length; i++) {
+  for(let i = 0; i < candles.length; i += 1) {
     const candle = candles[i]
     strategy.onTick(candle)
   }
