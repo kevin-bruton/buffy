@@ -4,6 +4,7 @@ import { LitElement, html } from 'lit-element';
 import * as d3 from 'd3';
 import * as dateFns from 'date-fns';
 import { styles } from './buffy-chart-styles.js';
+import dataProvider from '../strategic/data-provider.mjs';
 
 class BuffyChart extends LitElement {
   static get styles() {
@@ -13,28 +14,29 @@ class BuffyChart extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.init();
+    console.log('DATA PROVIDER:', dataProvider.getter);
+    dataProvider.getter();
   }
 
-  init() {
+  async init() {
     this.proptest = 1;
-    const api =
-      'http://localhost:3000/api/candles/bitfinex/BTCEUR/15m/2020-05-02/2020-05-03';
-    fetch(api)
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        const parsedData = this.parseData(data);
-        this.drawChart(parsedData);
-      })
-      .catch(err => console.log(err));
+    const dataToTestOn = {
+      provider: 'bitfinex',
+      symbol: 'BTCEUR',
+      interval: '15m',
+      from: '2020-05-02',
+      to: '2020-05-03',
+    };
+    const data = await dataProvider.getCandles(dataToTestOn);
+    const testData = this.addDate(data);
+    this.drawChart(testData);
   }
 
   /**
    * Parse data into key-value pairs
    * @param {object} data Object containing historical data of BPI
    */
-  parseData(data) {
+  addDate(data) {
     return data.map(candle => ({
       ...candle,
       ...{ date: new Date(candle.timestamp) },
@@ -62,7 +64,7 @@ class BuffyChart extends LitElement {
       (acc, cur) => Math.max(cur.open, cur.close, cur.low, cur.high, acc),
       Math.max(data[0].open, data[0].close, data[0].low, data[0].high)
     );
-    console.log(
+    /* console.log(
       'minY:',
       minPrice,
       'maxY:',
@@ -72,7 +74,7 @@ class BuffyChart extends LitElement {
       width,
       'barWidth:',
       barWidth
-    );
+    ); */
 
     const svg = d3
       .select(this.shadowRoot.querySelector('svg'))
@@ -130,7 +132,7 @@ class BuffyChart extends LitElement {
         return d.open < d.close ? y(d.close) : y(d.open);
       })
       .attr('height', d => {
-        console.log(
+        /* console.log(
           'open:',
           d.open,
           'close:',
@@ -141,7 +143,7 @@ class BuffyChart extends LitElement {
           d.high,
           'candle height:',
           Math.abs(d.close - d.open)
-        );
+        ); */
         const diff = Math.abs(y(d.close) - y(d.open));
         return diff;
         // return y(d.open) < y(d.close) ? diff : y(d.open) - diff;

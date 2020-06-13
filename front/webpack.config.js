@@ -5,10 +5,13 @@ const path = require('path');
 module.exports = ({ mode }) => {
   return {
     mode,
-    entry: './src/buffy-chart.js',
+    entry: {
+      buffyChart: './src/buffy-chart/buffy-chart.js',
+      dataProvider: './src/strategic/data-provider.mjs',
+    },
     output: {
       path: path.resolve(__dirname, 'dist'),
-      filename: 'buffy-chart.js',
+      filename: '[name].bundle.js',
     },
     plugins: [
       new HtmlWebpackPlugin({
@@ -18,7 +21,7 @@ module.exports = ({ mode }) => {
         patterns: [
           {
             context: 'node_modules/@webcomponents/webcomponentsjs',
-            from: '**/*.js',
+            from: 'webcomponents-loader.js',
             to: path.resolve(__dirname, 'dist', 'webcomponents'),
           },
         ],
