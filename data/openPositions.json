@@ -1,0 +1,22 @@
+[
+  {
+    "positionId": "bitfinex_BTCEUR_buy_1591658414035",
+    "mode": "backtest",
+    "symbol": "BTCEUR",
+    "provider": "bitfinex",
+    "quantity": 1,
+    "action": "buy",
+    "type": "market",
+    "timestamp": 1591658414035
+  },
+  {
+    "positionId": "bitfinex_BTCEUR_buy_1591658531598",
+    "timestamp": 1591658531598,
+    "mode": "backtest",
+    "symbol": "BTCEUR",
+    "provider": "bitfinex",
+    "quantity": 1,
+    "action": "buy",
+    "type": "market"
+  }
+]

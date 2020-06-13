@@ -1,8 +1,8 @@
-export { importHistoricData }
-
 import fs from 'fs'
 import path from 'path'
 import {pubRequest} from './pubRequest.mjs'
+
+export { importHistoricData }
 
 /**
  * Import Historic Data
@@ -30,7 +30,7 @@ async function importHistoricData({startDate, endDate, candleSize, symbol}) {
   })}`
   
   const resp = await pubRequest({pathParams, queryParams})
-  const filepath = path.join(path.resolve(), 'data', 'bfx', timeRangeDesc + '.json')
+  const filepath = path.join(path.resolve(), 'data', 'bfx', `${timeRangeDesc}.json`)
   const data = resp.map(candle => ({
     timestamp: candle[0],
     timeDate: (new Date(candle[0])).toLocaleString('es'),

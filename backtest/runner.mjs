@@ -1,7 +1,7 @@
-export {backtestRunner}
-
 import {getCandles} from './getCandles.mjs'
 import {getStrategy} from '../strategies/index.mjs'
+
+export {backtestRunner}
 
 /**
  * @typedef BackTestDef
