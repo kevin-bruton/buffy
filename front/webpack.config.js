@@ -5,10 +5,7 @@ const path = require('path');
 module.exports = ({ mode }) => {
   return {
     mode,
-    entry: {
-      buffyChart: './src/buffy-chart/buffy-chart.js',
-      dataProvider: './src/strategic/data-provider.mjs',
-    },
+    entry: './src/containers/back-test.js',
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: '[name].bundle.js',

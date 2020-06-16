@@ -1,53 +1,60 @@
-/* eslint-disable class-methods-use-this */
 /* eslint-disable no-console */
-import { LitElement, html } from 'lit-element';
+import { LitElement, html, css } from 'lit-element';
 import * as d3 from 'd3';
 import * as dateFns from 'date-fns';
-import { styles } from './buffy-chart-styles.js';
-import dataProvider from '../strategic/data-provider.mjs';
 
 class BuffyChart extends LitElement {
   static get styles() {
-    return styles;
+    return css`
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .bar-chart {
+        background-color: #c7d9d9;
+      }
+
+      .green-candle {
+        fill: rgb(61, 173, 16);
+      }
+
+      .red-candle {
+        fill: rgb(230, 17, 17);
+      }
+
+      .green-wick {
+        stroke: rgb(61, 173, 16);
+      }
+
+      .red-wick {
+        stroke: rgb(230, 17, 17);
+      }
+    `;
+  }
+
+  static get properties() {
+    return {
+      candles: { type: Array },
+    };
   }
 
   connectedCallback() {
     super.connectedCallback();
-    this.init();
-    console.log('DATA PROVIDER:', dataProvider.getter);
-    dataProvider.getter();
-  }
-
-  async init() {
-    this.proptest = 1;
-    const dataToTestOn = {
-      provider: 'bitfinex',
-      symbol: 'BTCEUR',
-      interval: '15m',
-      from: '2020-05-02',
-      to: '2020-05-03',
-    };
-    const data = await dataProvider.getCandles(dataToTestOn);
-    const testData = this.addDate(data);
-    this.drawChart(testData);
-  }
-
-  /**
-   * Parse data into key-value pairs
-   * @param {object} data Object containing historical data of BPI
-   */
-  addDate(data) {
-    return data.map(candle => ({
-      ...candle,
-      ...{ date: new Date(candle.timestamp) },
-    }));
+    Promise.resolve().then(() => this.drawChart(this.candles));
   }
 
   /**
    * Creates a chart using D3
    * @param {object} data Object containing historical data of BPI
    */
-  drawChart(data) {
+  drawChart(candles) {
+    const addDate = candleData =>
+      candleData.map(candle => ({
+        ...candle,
+        ...{ date: new Date(candle.timestamp) },
+      }));
+    const data = addDate(candles);
     const svgWidth = window.innerWidth; // 600;
     const svgHeight = (svgWidth * 2) / 3; // 400;
     const margin = { top: 20, right: 20, bottom: 30, left: 50 };
