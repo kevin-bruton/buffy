@@ -4,15 +4,8 @@ import fs from 'fs'
 
 const router = express.Router()
 
-router.use(function timeLog (req, res, next) {
-  // console.log('data router')
-  next()
-})
-
 router.get('/:provider/:symbol/:candlesize/:start/:end', (req, res) => {
-  console.log('got request')
   const {provider, symbol, candlesize, start, end} = req.params
-  console.log('Get data request recieved')
   try {
     if (!provider || !symbol || !candlesize || !start || !end) {
       throw new Error()

@@ -1,7 +1,7 @@
-export {getCandles}
-
 import path from 'path'
 import fs from 'fs'
+
+export {getCandles}
 
 /**
  * @typedef CandleSelection
@@ -10,8 +10,9 @@ import fs from 'fs'
  *
  * @param {*} {provider, selector}
  */
-function getCandles({provider, selector}) {
-  const dataFile = path.join(path.resolve(), 'data', provider, selector + '.json')
-  const candles = JSON.parse(fs.readFileSync(dataFile, {encoding: 'utf8'}))
+function getCandles({provider, symbol, interval, from, to}) {
+  const filename = `${symbol}_${interval}_${from}_${to}.json`
+  const filepath = path.join(path.resolve(), 'data', provider, filename)
+  const candles = JSON.parse(fs.readFileSync(filepath, {encoding: 'utf8'}))
   return candles
 }
