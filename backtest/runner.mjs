@@ -1,27 +1,61 @@
+import fs from 'fs'
+import path from 'path'
 import {getCandles} from './getCandles.mjs'
 import {getStrategy} from '../strategies/index.mjs'
+import trader from '../trader/index.mjs'
 
-export {backtestRunner}
+export {backTestRunner}
 
 /**
  * @typedef BackTestDef
- * @property {string} provider - Eg. 'bitfinex'
- * @property {string} selector - Eg. 'BTCEUR_15m_2020-05-02_2020-05-03'
+ * @property {string} provider - Eg. bitfinex
+ * @property {string} symbol - Eg. BTCEUR
+ * @property {string} interval - Eg. 15m
+ * @property {string} from - Eg. 2020-05-02
+ * @property {string} to - Eg. 2020-05-03
  * @property {string} strategyName
  * 
  * @param {BackTestDef} backTestDef
  */
-async function backtestRunner({provider, selector, strategyName}) {
-  const candles = getCandles({provider, selector})
+async function backTestRunner({provider, symbol, interval, from, to, strategy, quantity, initialBalance}) {
+  const candles = getCandles({provider, symbol, interval, from, to})
 
-  const strategy = await getStrategy(strategyName)
+  const tradeDir = createBackTestDirAndOverview({provider, symbol, interval, from, to, strategy, candles})
+
+  trader.init({
+    mode: 'backtest',
+    symbol,
+    provider,
+    quantity,
+    initialBalance,
+    tradeDir
+  })
+
+  const strat = await getStrategy(strategy)
   
-  strategy.init()
+  await strat.init()
 
   for(let i = 0; i < candles.length; i += 1) {
     const candle = candles[i]
-    strategy.onTick(candle)
+    // eslint-disable-next-line no-await-in-loop
+    await strat.onTick(candle)
   }
 
-  strategy.end()
+  await strat.end()
+  const backTestId = tradeDir.split('/').pop()
+  return backTestId
+}
+
+function createBackTestDirAndOverview({provider, symbol, interval, from, to, strategy, candles}) {
+  const dirName = `${strategy}_${provider}_${symbol}_${interval}_${from}_${to}`
+  const dirPath = path.join(path.resolve(), 'data', 'backtests', dirName)
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath)
+  }
+  const overviewFile = path.join(dirPath, 'overview.json')
+  const candlesFile = path.join(dirPath, 'candles.json')
+  const overview = {started: (new Date).valueOf()}
+  fs.writeFileSync(overviewFile, JSON.stringify(overview))
+  fs.writeFileSync(candlesFile, JSON.stringify(candles))
+  return dirPath
 }
