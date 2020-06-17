@@ -1,5 +1,6 @@
 import express from 'express'
 import candles from './candles.mjs'
+import trades from './trades.mjs'
 import importdata from './importdata.mjs'
 import backtest from './backtest.mjs'
 
@@ -10,6 +11,8 @@ router.use(function timeLog (req, res, next) {
   next()
 })
 router.use('/candles', candles)
+
+router.use('/trades', trades)
 
 router.use('/importdata', importdata)
 
