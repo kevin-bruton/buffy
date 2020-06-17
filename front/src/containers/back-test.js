@@ -27,7 +27,11 @@ class BackTest extends LitElement {
   async runBackTest(e) {
     const backTestDefn = e.detail;
     this.state = STATE.LOADING;
+    const result = await dataProvider.runBackTest(backTestDefn);
+    console.log('backtest result:', result);
     this.candles = await dataProvider.getCandles(backTestDefn);
+    this.trades = await dataProvider.getTrades(result.backTestId);
+    console.log('trades:', this.trades);
     setTimeout(() => (this.state = STATE.LOADED), 200);
   }
 
