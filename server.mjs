@@ -4,6 +4,7 @@ import apiRouter from './api/index.mjs'
 
 const app = express()
 app.use(cors())
+app.use(express.json())
 const port = process.env.PORT || 3000
 
 app.use('/api', apiRouter)
