@@ -14,9 +14,12 @@ router.get('/:backtestid', (req, res) => {
     const dataStr = fs.readFileSync(dataFile, {encoding: 'utf8'})
     const dataArr = dataStr.split('\n')
     const properties = dataArr.shift().split(';')
+    if (!dataArr[dataArr.length - 1].action) {
+      dataArr.pop()
+    }
     const trades = dataArr
       .map(trade => trade.split(';')
-      .reduce((acc, cur, i) => ({...acc, ...{[properties[i]]: cur}}), {}))
+      .reduce((acc, cur, i) => ({...acc, ...{[properties[i]]: Number.isNaN(Number(cur)) ? cur : Number(cur)}}), {}))
     res.json(trades)
   } catch(error) {  
     res.json({error})

@@ -1,15 +1,22 @@
 import {sma} from '../indicators/tulind.mjs'
 import trader from '../trader/index.mjs'
 
-export default (() => {
-  const closeValues = []
-  let counter = 0
-  let trades = 0
-  let openPosId = 0
-  let balance = 0
-  return {
+let closeValues
+let counter
+let trades
+let openPosId
+let balance
+const resetVars = () => {
+  closeValues = []
+  counter = 0
+  trades = 0
+  openPosId = 0
+  balance = 0
+}
+export default {
     init: async () => {
       console.log('run init')
+      resetVars()
     },
     onTick: async candle => {
       closeValues.push(candle.close)
@@ -18,9 +25,9 @@ export default (() => {
       // console.log(smaResult[smaResult.length - 1])
       if (counter % 10 === 0) {
         if (!openPosId) {
-          openPosId = trader.openPosition({action: 'buy', price: candle.close})
+          openPosId = trader.openPosition({action: 'buy', price: candle.close, timestamp: candle.timestamp})
         } else {
-          balance = trader.closePosition(openPosId, candle.close)
+          balance = trader.closePosition({positionId: openPosId, price: candle.close, timestamp: candle.timestamp})
           openPosId = 0
           trades += 1
         }
@@ -32,6 +39,6 @@ export default (() => {
         balance = trader.closePosition(openPosId, lastCandle.close)
       }
       console.log('Strategy finished.\nClosed', trades, 'positions\nFinal Balance:', Math.round(balance * 100) / 100)
+      resetVars()
     }
   }
-})()

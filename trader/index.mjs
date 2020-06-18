@@ -13,7 +13,7 @@ export default (() => {
   let initialBalance
   let currentBalance
   const saveTrade = ({action, quantity, price, type, limit, timestamp}) => {
-    fs.writeFileSync(tradesFile, `${action};${quantity};${price};${type};${limit};${timestamp};${currentBalance};
+    fs.writeFileSync(tradesFile, `${action};${quantity};${price};${type};${limit};${timestamp};${currentBalance}
 `, {flag: 'a'})
   }
   const saveOpenPosition = newPos => {
@@ -29,25 +29,24 @@ export default (() => {
       defaultQuantity = initData.quantity
       tradesFile = path.join(initData.tradeDir, 'trades.csv')
       openPositionsFile = path.join(initData.tradeDir, 'openPositions.json')
-      fs.writeFileSync(tradesFile, 'action;quantity;price;type;limit;timestamp;balance;\n')
+      fs.writeFileSync(tradesFile, 'action;quantity;price;type;limit;timestamp;balance\n')
       fs.writeFileSync(openPositionsFile, '[]')
       initialBalance = Number(initData.initialBalance)
       currentBalance = initialBalance
     },
-    openPosition: ({action, price, type, limit, quantity}) => {
+    openPosition: ({action, price, type, limit, quantity, timestamp}) => {
       defaultQuantity = quantity || defaultQuantity
-      const timestamp = (new Date()).valueOf()
       const positionId = `${provider}_${symbol}_${action}_${timestamp}`
       const newPos = {positionId, timestamp, action, quantity: quantity || defaultQuantity, price, type: type || 'market', limit: limit || ''}
       saveOpenPosition(newPos)
       return positionId
     },
-    closePosition: (positionId, closePrice) => {
+    closePosition: ({positionId, price, timestamp}) => {
       const openPositions = JSON.parse(fs.readFileSync(openPositionsFile, {encoding: 'utf8'}))
       const posIndex = openPositions.findIndex(pos => pos.positionId === positionId)
       const position = openPositions[posIndex]
-      currentBalance += ((closePrice * position.quantity) - (position.price * position.quantity))
-      saveTrade({...position, ...{action: 'sell', price: closePrice}})
+      currentBalance += ((price * position.quantity) - (position.price * position.quantity))
+      saveTrade({...position, ...{action: 'sell', price, timestamp}})
       fs.writeFileSync(openPositionsFile, JSON.stringify(openPositions.slice(0, posIndex - 1).concat(openPositions.slice(posIndex + 1))))
       return currentBalance
     }

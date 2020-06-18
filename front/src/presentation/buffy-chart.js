@@ -36,25 +36,27 @@ class BuffyChart extends LitElement {
   static get properties() {
     return {
       candles: { type: Array },
+      trades: { type: Array },
     };
   }
 
   connectedCallback() {
     super.connectedCallback();
-    Promise.resolve().then(() => this.drawChart(this.candles));
+    Promise.resolve().then(() => this.drawChart(this.candles, this.trades));
   }
 
   /**
    * Creates a chart using D3
    * @param {object} data Object containing historical data of BPI
    */
-  drawChart(candles) {
-    const addDate = candleData =>
-      candleData.map(candle => ({
-        ...candle,
-        ...{ date: new Date(candle.timestamp) },
+  drawChart(candles, trades) {
+    const addDate = series =>
+      series.map(obj => ({
+        ...obj,
+        ...{ date: new Date(obj.timestamp) },
       }));
     const data = addDate(candles);
+    const tradesData = trades && addDate(trades);
     const svgWidth = window.innerWidth; // 600;
     const svgHeight = (svgWidth * 2) / 3; // 400;
     const margin = { top: 20, right: 20, bottom: 30, left: 50 };
@@ -176,6 +178,29 @@ class BuffyChart extends LitElement {
       .attr('y1', d => y(d.low))
       .attr('x2', d => x(dateFns.addMilliseconds(d.date, dateInterval / 2)))
       .attr('y2', d => y(d.high));
+
+    if (tradesData && tradesData.length) {
+      // const projection = d3.geo.mercator()
+      const tradesGroup = svg
+        .append('g')
+        .attr('class', 'trades-group')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+      console.log('tradesData', tradesData);
+      tradesGroup
+        .selectAll('circle')
+        .data(tradesData)
+        .enter()
+        .append('circle')
+        .attr('cx', d => {
+          console.log(d.date);
+          return x(d.date);
+        })
+        .attr('cy', d => y(d.price))
+        .attr('r', '4px')
+        .attr('fill', d => (d.action === 'buy' ? 'blue' : 'purple'));
+    } else {
+      console.log('NOTE: NO TRADES DATA TO PLOT');
+    }
 
     // line between close points
     /* const line = d3.line()

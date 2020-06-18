@@ -7,7 +7,7 @@ router.post('/run', async (req, res) => {
   const {provider, symbol, interval, from, to, strategy, quantity, initialBalance} = req.body
   try {
     if (!provider || !symbol || !interval || !from || !to || !strategy || !quantity|| !initialBalance) {
-      throw new Error()
+      throw new Error('One of the necessary parameters were not provided')
     }
     const backTestId = await backTestRunner({provider, symbol, interval, from, to, strategy, quantity, initialBalance})
     res.json({runStatus: 'done', backTestId})
