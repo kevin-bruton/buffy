@@ -20,7 +20,7 @@ export {backTestRunner}
 async function backTestRunner({provider, symbol, interval, from, to, strategy, quantity, initialBalance}) {
   const candles = getCandles({provider, symbol, interval, from, to})
 
-  const tradeDir = createBackTestDirAndOverview({provider, symbol, interval, from, to, strategy, candles})
+  const backTestDir = createBackTestDirAndOverview({provider, symbol, interval, from, to, strategy, candles})
 
   trader.init({
     mode: 'backtest',
@@ -28,11 +28,12 @@ async function backTestRunner({provider, symbol, interval, from, to, strategy, q
     provider,
     quantity,
     initialBalance,
-    tradeDir
+    tradeDir: backTestDir
   })
 
   const strat = await getStrategy(strategy)
   
+  strat.backTestDir = backTestDir
   await strat.init()
 
   for(let i = 0; i < candles.length; i += 1) {
@@ -41,8 +42,9 @@ async function backTestRunner({provider, symbol, interval, from, to, strategy, q
     await strat.onTick(candle)
   }
 
-  await strat.end()
-  const backTestId = tradeDir.split('/').pop()
+  await strat.end(candles[candles.length - 1])
+  const backTestId = backTestDir.split('/').pop()
+  // TODO: add end time to overview.json
   return backTestId
 }
 
@@ -54,7 +56,7 @@ function createBackTestDirAndOverview({provider, symbol, interval, from, to, str
   }
   const overviewFile = path.join(dirPath, 'overview.json')
   const candlesFile = path.join(dirPath, 'candles.json')
-  const overview = {started: (new Date).valueOf()}
+  const overview = {started: (new Date).valueOf(), linesToPlot: []}
   fs.writeFileSync(overviewFile, JSON.stringify(overview))
   fs.writeFileSync(candlesFile, JSON.stringify(candles))
   return dirPath

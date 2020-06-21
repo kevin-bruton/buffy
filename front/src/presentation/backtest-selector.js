@@ -5,7 +5,7 @@ class BackTestSelector extends LitElement {
   constructor() {
     super();
     this.defaults = {
-      strategy: 'dumb',
+      strategy: 'follow',
       provider: 'bitfinex',
       symbol: 'BTCEUR',
       interval: '15m',

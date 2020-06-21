@@ -40,6 +40,10 @@ class BackTest extends LitElement {
         throw new Error('Error when trying to run back test:', backTestResult);
       }
       this.trades = await dataProvider.getTrades(backTestResult.backTestId);
+      [this.trades, this.lines] = await Promise.all([
+        dataProvider.getTrades(backTestResult.backTestId),
+        dataProvider.getPlotterLines(backTestResult.backTestId),
+      ]);
       if (!Array.isArray(this.trades)) {
         throw new Error('Error getting trades of backtest');
       }
@@ -47,18 +51,20 @@ class BackTest extends LitElement {
     } catch (err) {
       console.error('Error caught getting running test:', err);
     }
-    setTimeout(() => (this.state = STATE.LOADED), 200);
+    this.state = STATE.LOADED;
   }
 
   render() {
     return {
-      [STATE.SELECT_TEST]: html`<backtest-selector
+      [STATE.SELECT_TEST]: html` <backtest-selector
         @runBackTest="${this.runBackTest}"
       ></backtest-selector>`,
-      [STATE.LOADING]: html`<loading-spinner></loading-sspinner>`,
-      [STATE.LOADED]: html`<buffy-chart
+      [STATE.LOADING]: html`
+        <loading-spinner></loading-sspinner>`,
+      [STATE.LOADED]: html` <buffy-chart
           .candles="${this.candles}"
           .trades="${this.trades}"
+          .lines="${this.lines}"
         ></buffy-chart>
         <test-results
           .initialBalance="${this.initialBalance}"

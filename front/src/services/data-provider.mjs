@@ -7,8 +7,13 @@ export default (() => {
       return resp.json()
     },
     getTrades: async backTestId => {
-      const tradesUrl = `${baseUrl}/trades/${backTestId}`
+      const tradesUrl = `${baseUrl}trades/${backTestId}`
       const resp = await fetch(tradesUrl)
+      return resp.json()
+    },
+    getPlotterLines: async backTestId => {
+      const linesUrl = `${baseUrl}plotter/lines/${backTestId}`
+      const resp = await fetch(linesUrl)
       return resp.json()
     },
     runBackTest: async testDef => {

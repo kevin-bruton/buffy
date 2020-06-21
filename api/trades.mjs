@@ -8,7 +8,7 @@ router.get('/:backtestid', (req, res) => {
   const {backtestid} = req.params
   try {
     if (!backtestid) {
-      throw new Error()
+      throw new Error('backtestid not provided in request')
     }
     const dataFile = path.join(path.resolve(), 'data', 'backtests', backtestid, 'trades.csv')
     const dataStr = fs.readFileSync(dataFile, {encoding: 'utf8'})

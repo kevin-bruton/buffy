@@ -37,26 +37,30 @@ class BuffyChart extends LitElement {
     return {
       candles: { type: Array },
       trades: { type: Array },
+      lines: { type: Array },
     };
   }
 
   connectedCallback() {
     super.connectedCallback();
-    Promise.resolve().then(() => this.drawChart(this.candles, this.trades));
+    Promise.resolve().then(() =>
+      this.drawChart(this.candles, this.trades, this.lines)
+    );
   }
 
   /**
    * Creates a chart using D3
    * @param {object} data Object containing historical data of BPI
    */
-  drawChart(candles, trades) {
+  drawChart(candles, trades, lines) {
     const addDate = series =>
-      series.map(obj => ({
-        ...obj,
-        ...{ date: new Date(obj.timestamp) },
-      }));
+      series.map(obj => ({ ...obj, ...{ date: new Date(obj.timestamp) } }));
     const data = addDate(candles);
     const tradesData = trades && addDate(trades);
+    const linesData = lines.map(line => {
+      const linePoints = addDate(line.points);
+      return { ...line, ...{ points: linePoints } };
+    });
     const svgWidth = window.innerWidth; // 600;
     const svgHeight = (svgWidth * 2) / 3; // 400;
     const margin = { top: 20, right: 20, bottom: 30, left: 50 };
@@ -202,21 +206,34 @@ class BuffyChart extends LitElement {
       console.log('NOTE: NO TRADES DATA TO PLOT');
     }
 
-    // line between close points
-    /* const line = d3.line()
-    .x(d => { return x(d.date) + barWidth})
-    .y(d => {
-      // console.log('line:', d.date, d.close)
-      return y(d.close)})
-    // line graph
-    g.append("path")
-    .datum(data)
-    .attr("fill", "none")
-    .attr("stroke", "black")
-    .attr("stroke-linejoin", "round")
-    .attr("stroke-linecap", "round")
-    .attr("stroke-width", 1.5)
-    .attr("d", line); */
+    if (linesData && linesData.length) {
+      linesData.forEach(lineData => {
+        const linesGroup = svg
+          .append('g')
+          .attr('class', 'line-group')
+          .attr('transform', `translate(${margin.left},${margin.top})`);
+        console.log('lineData', lineData);
+        const line = d3
+          .line()
+          .x(d => {
+            return x(d.date) + barWidth;
+          })
+          .y(d => {
+            return y(d.price);
+          });
+        linesGroup
+          .append('path')
+          .datum(lineData.points)
+          .attr('fill', 'none')
+          .attr('stroke', lineData.color)
+          .attr('stroke-linejoin', 'round')
+          .attr('stroke-linecap', 'round')
+          .attr('stroke-width', 1.5)
+          .attr('d', line);
+      });
+    } else {
+      console.log('NOTE: NO LINES DATA TO PLOT');
+    }
   }
 
   render() {

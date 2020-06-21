@@ -11,8 +11,9 @@ router.post('/run', async (req, res) => {
     }
     const backTestId = await backTestRunner({provider, symbol, interval, from, to, strategy, quantity, initialBalance})
     res.json({runStatus: 'done', backTestId})
-  } catch(error) {  
-    res.json({error})
+  } catch(error) {
+    console.error(error)
+    res.json({error: 'Error trying to run back test'})
   }
 })
 
