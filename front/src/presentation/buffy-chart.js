@@ -197,7 +197,7 @@ class BuffyChart extends LitElement {
         .append('circle')
         .attr('cx', d => {
           console.log(d.date);
-          return x(d.date);
+          return x(d.date) + barWidth;
         })
         .attr('cy', d => y(d.price))
         .attr('r', '4px')

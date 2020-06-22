@@ -34,7 +34,7 @@ async function backTestRunner({provider, symbol, interval, from, to, strategy, q
   const strat = await getStrategy(strategy)
   
   strat.backTestDir = backTestDir
-  await strat.init()
+  await strat.init(initialBalance)
 
   for(let i = 0; i < candles.length; i += 1) {
     const candle = candles[i]
