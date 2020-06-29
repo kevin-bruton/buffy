@@ -9,8 +9,8 @@ router.post('/run', async (req, res) => {
     if (!provider || !symbol || !interval || !from || !to || !strategy || !quantity|| !initialBalance) {
       throw new Error('One of the necessary parameters were not provided')
     }
-    const backTestId = await backTestRunner({provider, symbol, interval, from, to, strategy, quantity, initialBalance})
-    res.json({runStatus: 'done', backTestId})
+    const backTestResults = await backTestRunner({provider, symbol, interval, from, to, strategy, quantity, initialBalance})
+    res.json({...{runStatus: 'done'}, ...backTestResults})
   } catch(error) {
     console.error(error)
     res.json({error: 'Error trying to run back test'})

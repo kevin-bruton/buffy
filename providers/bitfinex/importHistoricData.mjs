@@ -1,8 +1,25 @@
-import fs from 'fs'
-import path from 'path'
 import {pubRequest} from './pubRequest.mjs'
+import {saveCandles} from '../../db/candles.mjs'
 
-export { importHistoricData }
+export { importHistoricData, importCandles }
+
+async function importCandles({startDate, endDate, symbol}) {
+  const candleSize = '1m'
+  const rateLimiter = () => new Promise(resolve => setTimeout(() => resolve(), 1001))
+  const dayInMillis = 1000 * 60 * 60 * 24
+  const startTimestamp = (new Date(startDate)).valueOf()
+  const endTimestamp = (new Date(endDate)).valueOf()
+  let candles = []
+  for (let start = startTimestamp; start < endTimestamp; start += dayInMillis) {
+    // eslint-disable-next-line no-await-in-loop
+    const newCandles = await importHistoricData({startDate: start, endDate: (start + dayInMillis - 1), candleSize, symbol})
+    candles = candles.concat(newCandles)
+    // eslint-disable-next-line no-await-in-loop
+    await rateLimiter()
+  }
+
+  saveCandles('bitfinex', symbol, candles)
+}
 
 /**
  * Import Historic Data
@@ -15,7 +32,6 @@ export { importHistoricData }
  * @params {ImportSelection} importSelection
  */
 async function importHistoricData({startDate, endDate, candleSize, symbol}) {
-  const timeRangeDesc = `${symbol}_${candleSize}_${startDate}_${endDate}`
   const startTimestamp = (new Date(startDate)).valueOf()
   const endTimestamp = (new Date(endDate)).valueOf()
   
@@ -23,14 +39,14 @@ async function importHistoricData({startDate, endDate, candleSize, symbol}) {
   // const queryParams = `?${new URLSearchParams(`limit=120&start=${startTimestamp}&end=${endTimestamp}&sort=1`)}` // Change these based on relevant query params listed in the docs
   // @ts-ignore
   const queryParams = `?${new URLSearchParams({
-    limit: 120,
+    limit: 10000,
     start: startTimestamp,
     end: endTimestamp,
     sort:1
   })}`
   
   const resp = await pubRequest({pathParams, queryParams})
-  const filepath = path.join(path.resolve(), 'data', 'bfx', `${timeRangeDesc}.json`)
+
   const data = resp.map(candle => ({
     timestamp: candle[0],
     timeDate: (new Date(candle[0])).toLocaleString('es'),
@@ -40,7 +56,5 @@ async function importHistoricData({startDate, endDate, candleSize, symbol}) {
     low: candle[4],
     volume: candle[5]
   }))
-  console.log('Data length retrieved:', data.length)
-  fs.writeFileSync(filepath, JSON.stringify(data, null, 2))
-  // console.log(resp)
+  return data
 }

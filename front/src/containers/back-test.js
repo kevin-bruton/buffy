@@ -32,18 +32,13 @@ class BackTest extends LitElement {
     this.state = STATE.LOADING;
 
     try {
-      [backTestResult, this.candles] = await Promise.all([
-        dataProvider.runBackTest(backTestDefn),
-        dataProvider.getCandles(backTestDefn),
-      ]);
+      backTestResult = await dataProvider.runBackTest(backTestDefn);
       if (backTestResult.error) {
         throw new Error('Error when trying to run back test:', backTestResult);
       }
-      this.trades = await dataProvider.getTrades(backTestResult.backTestId);
-      [this.trades, this.lines] = await Promise.all([
-        dataProvider.getTrades(backTestResult.backTestId),
-        dataProvider.getPlotterLines(backTestResult.backTestId),
-      ]);
+      this.trades = backTestResult.trades;
+      this.lines = backTestResult.linesToPlot;
+      this.candles = backTestResult.candles;
       if (!Array.isArray(this.trades)) {
         throw new Error('Error getting trades of backtest');
       }

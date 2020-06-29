@@ -1,11 +1,11 @@
+import fetch from 'node-fetch'
+
 export {pubRequest}
 
-import fetch from 'node-fetch'
 const baseUrl = 'https://api-pub.bitfinex.com/v2/'
 
 async function pubRequest({pathParams = '', queryParams = ''}) {
   const url = `${baseUrl}${pathParams}${queryParams}`
-  console.log(url)
     try {
         const req = await fetch(url)
         const response = await req.json()

@@ -57,10 +57,12 @@ class BuffyChart extends LitElement {
       series.map(obj => ({ ...obj, ...{ date: new Date(obj.timestamp) } }));
     const data = addDate(candles);
     const tradesData = trades && addDate(trades);
-    const linesData = lines.map(line => {
-      const linePoints = addDate(line.points);
-      return { ...line, ...{ points: linePoints } };
-    });
+    const linesData =
+      lines &&
+      lines.map(line => {
+        const linePoints = addDate(line.points);
+        return { ...line, ...{ points: linePoints } };
+      });
     const svgWidth = window.innerWidth; // 600;
     const svgHeight = (svgWidth * 2) / 3; // 400;
     const margin = { top: 20, right: 20, bottom: 30, left: 50 };
@@ -77,17 +79,6 @@ class BuffyChart extends LitElement {
       (acc, cur) => Math.max(cur.open, cur.close, cur.low, cur.high, acc),
       Math.max(data[0].open, data[0].close, data[0].low, data[0].high)
     );
-    /* console.log(
-      'minY:',
-      minPrice,
-      'maxY:',
-      maxPrice,
-      data.length,
-      'width:',
-      width,
-      'barWidth:',
-      barWidth
-    ); */
 
     const svg = d3
       .select(this.shadowRoot.querySelector('svg'))
@@ -145,21 +136,8 @@ class BuffyChart extends LitElement {
         return d.open < d.close ? y(d.close) : y(d.open);
       })
       .attr('height', d => {
-        /* console.log(
-          'open:',
-          d.open,
-          'close:',
-          d.close,
-          'low:',
-          d.low,
-          'high:',
-          d.high,
-          'candle height:',
-          Math.abs(d.close - d.open)
-        ); */
         const diff = Math.abs(y(d.close) - y(d.open));
         return diff;
-        // return y(d.open) < y(d.close) ? diff : y(d.open) - diff;
       })
       .attr('width', barWidth - barPadding * 2)
       .attr('class', d => (d.close > d.open ? 'green-candle' : 'red-candle'))
@@ -184,35 +162,32 @@ class BuffyChart extends LitElement {
       .attr('y2', d => y(d.high));
 
     if (tradesData && tradesData.length) {
-      // const projection = d3.geo.mercator()
       const tradesGroup = svg
         .append('g')
         .attr('class', 'trades-group')
         .attr('transform', `translate(${margin.left},${margin.top})`);
-      console.log('tradesData', tradesData);
       tradesGroup
         .selectAll('circle')
         .data(tradesData)
         .enter()
         .append('circle')
-        .attr('cx', d => {
-          console.log(d.date);
-          return x(d.date) + barWidth;
-        })
+        .attr('cx', d => x(d.date) + barWidth)
         .attr('cy', d => y(d.price))
         .attr('r', '4px')
-        .attr('fill', d => (d.action === 'buy' ? 'blue' : 'purple'));
+        .attr('fill', d => (d.action === 'buy' ? 'green' : 'red'));
     } else {
       console.log('NOTE: NO TRADES DATA TO PLOT');
     }
 
     if (linesData && linesData.length) {
       linesData.forEach(lineData => {
+        if (lineData.points.length < 2) {
+          return;
+        }
         const linesGroup = svg
           .append('g')
           .attr('class', 'line-group')
           .attr('transform', `translate(${margin.left},${margin.top})`);
-        console.log('lineData', lineData);
         const line = d3
           .line()
           .x(d => {

@@ -31,4 +31,12 @@ export class LinePlot {
     overview.linesToPlot.push(this.name)
     fs.writeFileSync(path.join(this.strategy.backTestDir, 'overview.json'), JSON.stringify(overview))
   }
+
+  getLine() {
+    return {
+      name: this.name,
+      color: this.color,
+      points: this.points
+    }
+  }
 }

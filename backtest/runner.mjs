@@ -1,8 +1,6 @@
-import fs from 'fs'
-import path from 'path'
-import {getCandles} from './getCandles.mjs'
 import {getStrategy} from '../strategies/index.mjs'
-import trader from '../trader/index.mjs'
+import {Trader} from '../trader/Trader.mjs'
+import {getCandles} from '../db/candles.mjs'
 
 export {backTestRunner}
 
@@ -18,11 +16,11 @@ export {backTestRunner}
  * @param {BackTestDef} backTestDef
  */
 async function backTestRunner({provider, symbol, interval, from, to, strategy, quantity, initialBalance}) {
-  const candles = getCandles({provider, symbol, interval, from, to})
+  const candles = getCandles(provider, symbol, from, to, interval)
 
-  const backTestDir = createBackTestDirAndOverview({provider, symbol, interval, from, to, strategy, candles})
+  const backTestDir = getBackTestId({provider, symbol, interval, from, to, strategy})
 
-  trader.init({
+  const trader = new Trader({
     mode: 'backtest',
     symbol,
     provider,
@@ -31,10 +29,7 @@ async function backTestRunner({provider, symbol, interval, from, to, strategy, q
     tradeDir: backTestDir
   })
 
-  const strat = await getStrategy(strategy)
-  
-  strat.backTestDir = backTestDir
-  await strat.init(initialBalance)
+  const strat = new (await getStrategy(strategy))(initialBalance, trader)
 
   for(let i = 0; i < candles.length; i += 1) {
     const candle = candles[i]
@@ -44,20 +39,33 @@ async function backTestRunner({provider, symbol, interval, from, to, strategy, q
 
   await strat.end(candles[candles.length - 1])
   const backTestId = backTestDir.split('/').pop()
-  // TODO: add end time to overview.json
+  // TODO: add end time 
+  return {
+    backTestId,
+    linesToPlot: strat.getLinesToPlot(),
+    trades: trader.trades,
+    candles
+  }
+}
+
+function getBackTestId({provider, symbol, interval, from, to, strategy}) {
+  const backTestId = `${strategy}_${provider}_${symbol}_${interval}_${from}_${to}`
   return backTestId
 }
 
-function createBackTestDirAndOverview({provider, symbol, interval, from, to, strategy, candles}) {
-  const dirName = `${strategy}_${provider}_${symbol}_${interval}_${from}_${to}`
-  const dirPath = path.join(path.resolve(), 'data', 'backtests', dirName)
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath)
-  }
-  const overviewFile = path.join(dirPath, 'overview.json')
-  const candlesFile = path.join(dirPath, 'candles.json')
-  const overview = {started: (new Date).valueOf(), linesToPlot: []}
-  fs.writeFileSync(overviewFile, JSON.stringify(overview))
-  fs.writeFileSync(candlesFile, JSON.stringify(candles))
-  return dirPath
-}
+/* 
+CREATE TABLE backtests (
+    backTestId        CHAR (50)    PRIMARY KEY
+                                   UNIQUE
+                                   NOT NULL,
+    provider          CHAR (50)    NOT NULL,
+    symbol            CHAR (10)    NOT NULL,
+    startRunTimeStamp INTEGER (15) NOT NULL,
+    endRunTimeStamp   INTEGER (15),
+    linesToPlot       CHAR         NOT NULL
+                                   DEFAULT "[]",
+    openPositions     CHAR         NOT NULL
+                                   DEFAULT "[]"
+);
+
+ */

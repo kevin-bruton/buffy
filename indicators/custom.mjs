@@ -10,7 +10,6 @@ export class TrailingLongStop {
     if (stop) {
       this.maxPrice = 0
     }
-    console.log('currentPrice:', currentPrice, 'maxPrice:', this.maxPrice, 'diff:', (this.maxPrice - currentPrice), 'margin:', this.priceMargin, 'stop:', stop)
     return stop
   }
 }

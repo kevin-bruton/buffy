@@ -1,9 +1,3 @@
-import {importHistoricData} from '../providers/bitfinex/index.mjs'
+import {importCandles} from '../providers/bitfinex/index.mjs'
 
-const importSelection = {
-  startDate: '2020-05-02',
-  endDate: '2020-05-03',
-  candleSize: '15m',
-  symbol: 'BTCEUR'
-}
-importHistoricData(importSelection)
+importCandles({startDate: '2020-01-01', endDate: '2020-06-27  ', symbol: 'BTCUSD'})

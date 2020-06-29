@@ -5,14 +5,14 @@ class BackTestSelector extends LitElement {
   constructor() {
     super();
     this.defaults = {
-      strategy: 'follow',
+      strategy: 'FollowMe',
       provider: 'bitfinex',
-      symbol: 'BTCEUR',
-      interval: '15m',
-      from: '2020-05-02',
-      to: '2020-05-03',
-      quantity: 10,
-      initialBalance: 1000,
+      symbol: 'BTCUSD',
+      interval: '30m',
+      from: '2020-01-06',
+      to: '2020-01-15',
+      quantity: 1,
+      initialBalance: 7219,
     };
   }
 
