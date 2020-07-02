@@ -108,8 +108,8 @@ class TestResults extends LitElement {
         this.roundTrips.map(
           t =>
             html`<tr>
-              <td>${dateFns.format(t.from, 'yyyy-MM-dd hh:mm')}</td>
-              <td>${dateFns.format(t.to, 'yyyy-MM-dd hh:mm')}</td>
+              <td>${dateFns.format(t.from, 'yyyy-MM-dd HH:mm')}</td>
+              <td>${dateFns.format(t.to, 'yyyy-MM-dd HH:mm')}</td>
               <td>${t.buyPrice}</td>
               <td>${t.sellPrice}</td>
               <td>${t.quantity}</td>

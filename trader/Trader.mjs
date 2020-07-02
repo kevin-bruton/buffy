@@ -4,6 +4,7 @@ export class Trader {
     this.symbol = initData.symbol
     this.provider = initData.provider
     this.defaultQuantity = initData.quantity
+    this.quantityType = initData.quantityType
     this.initialBalance = Number(initData.initialBalance)
     this.currentBalance = this.initialBalance
     this.openPositions = []
@@ -23,7 +24,9 @@ export class Trader {
     const posIndex = this.openPositions.findIndex(pos => pos.positionId === positionId)
     const position = this.openPositions[posIndex]
     this.openPositions = this.openPositions.slice(0, posIndex).concat(this.openPositions.slice(posIndex + 1))
-    this.currentBalance += ((price * position.quantity) - (position.price * position.quantity))
+    this.currentBalance = this.quantityType === 'Shares'
+      ? this.currentBalance + ((price * position.quantity) - (position.price * position.quantity))
+      : this.currentBalance + (position.quantity/position.price * price) - position.quantity
     this.trades.push({...position, ...{action: 'sell', price, timestamp, balance: this.currentBalance}})
     return this.currentBalance
   }

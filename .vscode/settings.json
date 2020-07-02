@@ -2,4 +2,5 @@
   "javascript.validate.enable": false,
   "typescript.format.enable": false,
   "typescript.validate.enable": false,
+  "deno.enable": false,
 }

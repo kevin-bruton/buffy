@@ -9,10 +9,11 @@ class BackTestSelector extends LitElement {
       provider: 'bitfinex',
       symbol: 'BTCUSD',
       interval: '30m',
-      from: '2020-01-06',
-      to: '2020-01-15',
-      quantity: 1,
-      initialBalance: 7219,
+      from: '2020-01-01',
+      to: '2020-01-08',
+      quantity: 1000,
+      quantityType: 'Price', // Price/Shares
+      initialBalance: 10000,
     };
   }
 

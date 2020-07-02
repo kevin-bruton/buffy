@@ -15,7 +15,7 @@ export {backTestRunner}
  * 
  * @param {BackTestDef} backTestDef
  */
-async function backTestRunner({provider, symbol, interval, from, to, strategy, quantity, initialBalance}) {
+async function backTestRunner({provider, symbol, interval, from, to, strategy, quantity, quantityType, initialBalance}) {
   const candles = getCandles(provider, symbol, from, to, interval)
 
   const backTestDir = getBackTestId({provider, symbol, interval, from, to, strategy})
@@ -25,6 +25,7 @@ async function backTestRunner({provider, symbol, interval, from, to, strategy, q
     symbol,
     provider,
     quantity,
+    quantityType,
     initialBalance,
     tradeDir: backTestDir
   })
