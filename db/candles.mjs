@@ -38,7 +38,7 @@ function getCandles(provider, symbol, start, end, candleSize) {
 }
 
 function saveCandles(provider, symbol, candles) {
-  const tableName = `${provider}_${symbol}_candles`
+  const tableName = `${provider}_${symbol}_candles`.replace(/\./g, '')
   const db = dbOpen()
   
   dbRun(db, `CREATE TABLE IF NOT EXISTS ${tableName}_candles (`
@@ -52,7 +52,7 @@ function saveCandles(provider, symbol, candles) {
   + ')')
 
   const values = candles.reduce((acc, cur) => {
-    return `${acc},(${cur.timestamp},'${cur.timeDate}',${cur.open},${cur.close},${cur.high},${cur.low},${cur.volume})`
+    return `${acc},(${cur.timestamp},'${cur.timeDate}','${cur.open}','${cur.close}','${cur.high}','${cur.low}',${cur.volume})`
   }, '').substring(1)
   
   dbRun(db, `INSERT INTO ${tableName}_candles(timestamp, timeDate, open, close, high, low, volume) VALUES ${values}`)
