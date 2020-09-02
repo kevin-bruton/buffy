@@ -3,6 +3,7 @@ import { LitElement, html } from 'lit-element';
 import dataProvider from '../services/data-provider.mjs';
 import '../presentation/backtest-selector.js';
 import '../presentation/buffy-chart.js';
+import '../presentation/plotly-chart.js';
 import '../presentation/loading-spinner.js';
 import '../presentation/test-results.js';
 
@@ -42,8 +43,8 @@ class BackTest extends LitElement {
       if (!Array.isArray(this.trades)) {
         throw new Error('Error getting trades of backtest');
       }
-      console.log('trades:', this.trades);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error caught getting running test:', err);
     }
     this.state = STATE.LOADED;
@@ -56,16 +57,21 @@ class BackTest extends LitElement {
       ></backtest-selector>`,
       [STATE.LOADING]: html`
         <loading-spinner></loading-sspinner>`,
-      [STATE.LOADED]: html` <buffy-chart
+      [STATE.LOADED]: html` <plotly-chart
           .candles="${this.candles}"
           .trades="${this.trades}"
           .lines="${this.lines}"
-        ></buffy-chart>
+        ></plotly-chart>
         <test-results
           .initialBalance="${this.initialBalance}"
           .trades="${this.trades}"
         ></test-results>`,
     }[this.state];
+    /* <!-- <buffy-chart
+      .candles="${this.candles}"
+      .trades="${this.trades}"
+      .lines="${this.lines}"
+    ></buffy-chart> --> */
   }
 }
 
