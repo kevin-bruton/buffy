@@ -4,17 +4,20 @@ import { LitElement, html } from 'lit-element';
 class BackTestSelector extends LitElement {
   constructor() {
     super();
-    this.defaults = {
-      strategy: 'FollowMe',
-      provider: 'bitfinex',
-      symbol: 'BTCUSD',
-      interval: '30m',
-      from: '2020-01-01',
-      to: '2020-01-08',
-      quantity: 1000,
-      quantityType: 'Price', // Price/Shares
-      initialBalance: 10000,
-    };
+    const backTestDefaults = localStorage.getItem('BUFFY_BACKTEST_DEFAULTS');
+    this.defaults = backTestDefaults
+      ? JSON.parse(backTestDefaults)
+      : {
+          strategy: 'EmaRsi',
+          provider: 'bitfinex',
+          symbol: 'BTCUSD',
+          interval: '1D',
+          from: '2020-01-01',
+          to: '2020-06-01',
+          quantity: 1000,
+          quantityType: 'Price', // Price/Shares
+          initialBalance: 10000,
+        };
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -24,6 +27,10 @@ class BackTestSelector extends LitElement {
       (acc, cur) => (cur.name ? { ...acc, ...{ [cur.name]: cur.value } } : acc),
       {}
     );
+    localStorage.setItem(
+      'BUFFY_BACKTEST_DEFAULTS',
+      JSON.stringify(backTestData)
+    );
     this.dispatchEvent(
       new CustomEvent('runBackTest', { detail: backTestData })
     );
@@ -31,7 +38,7 @@ class BackTestSelector extends LitElement {
 
   render() {
     const fields = Object.keys(this.defaults).map(
-      key =>
+      (key, i) =>
         html`<tr>
           <td><label>${key}</label></td>
           <td>
@@ -39,11 +46,12 @@ class BackTestSelector extends LitElement {
               type="text"
               name="${key}"
               value="${this.defaults[key]}"
+              autofocus="?${i === 0}"
             /><br />
           </td>
         </tr>`
     );
-    return html` <form @submit="${this.runBackTest}">
+    return html` <form @submit="${this.runBackTest}" @keyup="${this.testKeyup}">
       <table>
         ${fields}
       </table>

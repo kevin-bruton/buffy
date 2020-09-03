@@ -16,11 +16,11 @@ class BuffyChart extends LitElement {
       }
 
       .green-candle {
-        fill: rgb(61, 173, 16);
+        fill: green; /* rgb(61, 173, 16); */
       }
 
       .red-candle {
-        fill: rgb(230, 17, 17);
+        fill: red; /*  rgb(230, 17, 17); */
       }
 
       .green-wick {
