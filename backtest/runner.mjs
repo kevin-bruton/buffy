@@ -1,6 +1,7 @@
 import {getStrategy} from '../strategies/index.mjs'
 import {Trader} from '../trader/Trader.mjs'
 import {getCandles} from '../db/candles.mjs'
+import { Plotter } from '../plotter/Plotter.mjs'
 
 export {backTestRunner}
 
@@ -32,7 +33,9 @@ async function backTestRunner({provider, symbol, interval, from, to, strategy, q
     tradeDir: backTestDir
   })
 
-  const strat = new (await getStrategy(strategy))(initialBalance, trader)
+  const plotter =  new Plotter()
+
+  const strat = new (await getStrategy(strategy))(initialBalance, trader, plotter)
 
   for(let i = 0; i < candles.length; i += 1) {
     const candle = candles[i]
@@ -45,7 +48,7 @@ async function backTestRunner({provider, symbol, interval, from, to, strategy, q
   // TODO: add end time 
   return {
     backTestId,
-    linesToPlot: strat.getLinesToPlot(),
+    linesToPlot: plotter.getLinesToPlot(),
     trades: trader.trades,
     candles
   }

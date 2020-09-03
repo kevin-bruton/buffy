@@ -1,9 +1,8 @@
 import {rsi, ema} from '../indicators/tulind.mjs'
-import {LinePlot} from '../plotter/lines.mjs'
 // import {TrailingLongStop} from '../indicators/custom.mjs'
 
 export class RsiEmaStrategy {
-  constructor(initialBalance, trader) {
+  constructor(initialBalance, trader, plotter) {
     this.closeValues = []
     this.trades = 0
     this.openPosId = 0
@@ -12,7 +11,8 @@ export class RsiEmaStrategy {
     this.trader = trader
     this.rsiSize = 14
     this.emaSize = 300
-    this.emaLine = new LinePlot({name: 'EMA', color: 'blue', strategy: this})
+    this.plotter = plotter
+    this.plotter.addLine('EMA', 'blue')
     // this.diffPercentForBuy = 0.01
     // this.trailingStop = new TrailingLongStop({priceMargin: 50})
     console.log('Strategy init')
@@ -30,7 +30,7 @@ export class RsiEmaStrategy {
     const currentRsi = await rsiValues[rsiValues.length - 1]
     // console.log('rsi:', currentRsi, 'ema:', currentEma, 'price:', candle.close)
     // const emaDiffPercent = (currentEma - emaValues[emaValues.length - 2]) * 100 / candle.close
-    this.emaLine.addPoint({timestamp: candle.timestamp, price: currentEma})
+    this.plotter.addPointToLine('EMA', {timestamp: candle.timestamp, price: currentEma})
     const emaLineTendencyUp = (emaValues[emaValues.length - 5] < currentEma)
     const priceEmaTendencyUp = (candle.close > currentEma)
 
@@ -58,7 +58,7 @@ export class RsiEmaStrategy {
   async end(candle) {
     const emaValues = await ema(50, this.closeValues)
     const currentEma = emaValues[emaValues.length - 1]
-    this.emaLine.addPoint({timestamp: candle.timestamp, price: currentEma})
+    this.plotter.addPointToLine('EMA', {timestamp: candle.timestamp, price: currentEma})
     if (this.openPosId) {
       const openPosPrice = this.trader.getPositionById(this.openPosId).price
       this.balance = this.trader.closePosition({positionId: this.openPosId, price: candle.close, timestamp: candle.timestamp})
@@ -68,11 +68,5 @@ export class RsiEmaStrategy {
     const finalBalance = Math.round(this.balance * 100) / 100
     console.log('Strategy finished.\nClosed', this.trades, 'positions\nFinal Balance:', finalBalance,
     `Profit: ${Math.round((finalBalance - this.initialBalance) * 10000 / this.initialBalance) / 100}%`)
-  }
-
-  getLinesToPlot() {
-    return [
-      this.emaLine.getLine()
-    ]
   }
 }

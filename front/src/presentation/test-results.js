@@ -95,6 +95,15 @@ class TestResults extends LitElement {
     return html`
       <table class="results-table">
         <tr>
+          <th>Initial Balance: ${this.initialBalance}</th>
+          <th>Final Balance: ${this.finalBalance}</th>
+          <th>Total Profit: ${this.totalProfit}</th>
+          <th>Profit %: ${this.profitPercentage}</th>
+        </tr>
+      </table>
+      <br />
+      <table class="results-table">
+        <tr>
           <th>From</th>
           <th>To</th>
           <th>Buy Price</th>
@@ -119,15 +128,6 @@ class TestResults extends LitElement {
             </tr>`
           // eslint-disable-next-line lit/attribute-value-entities
         )}
-      </table>
-      <br />
-      <table class="results-table">
-        <tr>
-          <th>Initial Balance: ${this.initialBalance}</th>
-          <th>Final Balance: ${this.finalBalance}</th>
-          <th>Total Profit: ${this.totalProfit}</th>
-          <th>Profit %: ${this.profitPercentage}</th>
-        </tr>
       </table>
     `;
   }

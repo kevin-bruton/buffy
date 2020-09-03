@@ -1,5 +1,4 @@
 import {rsi} from '../indicators/tulind.mjs'
-import {LinePlot} from '../plotter/lines.mjs'
 // import {TrailingLongStop} from '../indicators/custom.mjs'
 
 /**
@@ -7,14 +6,15 @@ import {LinePlot} from '../plotter/lines.mjs'
  * Sell all open positions when rsi reaches > 70
  */
 export class RsiStrategy {
-  constructor(initialBalance, trader) {
+  constructor(initialBalance, trader, plotter) {
     this.closeValues = []
     this.trades = 0
     this.openPosIds = []
     this.balance = initialBalance
     this.trader = trader
+    this.plotter = plotter
     this.rsiSize = 14
-    this.rsiLine = new LinePlot({name: 'RSI', color: 'blue', strategy: this})
+    this.plotter.addLine('RSI', 'blue')
     // this.trailingStop = new TrailingLongStop({priceMargin: 50})
     console.log('Strategy init')
   }
@@ -28,7 +28,7 @@ export class RsiStrategy {
     // Get RSI
     const rsiValues = await rsi(this.rsiSize, this.closeValues)
     const currentRsi = rsiValues[rsiValues.length - 1]
-    this.rsiLine.addPoint({timestamp: candle.timestamp, price: currentRsi})
+    this.plotter.addPointToLine('RSI', {timestamp: candle.timestamp, price: currentRsi})
 
     // Test if to open/close position
     if (currentRsi <= 30) {
@@ -45,17 +45,11 @@ export class RsiStrategy {
   async end (candle) {
     const rsiValues = await rsi(this.rsiSize, this.closeValues)
     const currentRsi = rsiValues[rsiValues.length - 1]
-    this.rsiLine.addPoint({timestamp: candle.timestamp, price: currentRsi})
+    this.plotter.addPointToLine('RSI', {timestamp: candle.timestamp, price: currentRsi})
     this.openPosIds.forEach(posId => {
       this.balance = this.trader.closePosition({positionId: posId, price: candle.close, timestamp: candle.timestamp})
       this.trades += 1
     })
     console.log('Strategy finished.\nClosed', this.trades, 'positions\nFinal Balance:', Math.round(this.balance * 100) / 100)
-  }
-
-  getLinesToPlot() {
-    return [
-      this.rsiLine.getLine()
-    ]
   }
 }

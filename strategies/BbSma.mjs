@@ -1,22 +1,24 @@
 import {bbands, sma} from '../indicators/tulind.mjs'
-import {LinePlot} from '../plotter/lines.mjs'
 // import {TrailingLongStop} from '../indicators/custom.mjs'
 
 const twoDec = num => Math.round(num * 100) / 100
 const formatDate = timestamp => String(new Date(timestamp)).substring(3, 21)
 
 export class BbSmaStrategy {
-  constructor(initialBalance, trader) {
+  constructor(initialBalance, trader, plotter) {
     this.closeValues = []
     this.trades = 0
     this.openPosId = 0
     this.balance = initialBalance
     this.trader = trader
+    this.plotter = plotter
     this.smaSize = 120
-    this.lowerBand = new LinePlot({name: 'lower', color: 'orange', strategy: this})
-    this.middleBand = new LinePlot({name: 'middle', color: 'orange', strategy: this})
-    this.upperBand = new LinePlot({name: 'upper', color: 'orange', strategy: this})
-    this.smaLine = new LinePlot({name: 'SMA', color: 'blue', strategy: this})
+    
+    this.plotter.addLine('lowerBB', 'orange')
+    this.plotter.addLine('middleBB', 'orange')
+    this.plotter.addLine('upperBB', 'orange')
+    this.plotter.addLine('SMA', 'blue')
+
     this.priceBought = undefined
     // this.diffPercentForBuy = 0.01
     // this.trailingStop = new TrailingLongStop({priceMargin: 50})
@@ -36,10 +38,10 @@ export class BbSmaStrategy {
     const middle = bbValues.middle[bbValues.middle.length - 1]
     const upper = bbValues.upper[bbValues.upper.length - 1]
     
-    this.smaLine.addPoint({timestamp: candle.timestamp, price: smaVal})
-    this.lowerBand.addPoint({timestamp: candle.timestamp, price: lower})
-    this.middleBand.addPoint({timestamp: candle.timestamp, price: middle})
-    this.upperBand.addPoint({timestamp: candle.timestamp, price: upper})
+    this.plotter.addPointToLine('lowerBB', {timestamp: candle.timestamp, price: lower})
+    this.plotter.addPointToLine('middleBB', {timestamp: candle.timestamp, price: middle})
+    this.plotter.addPointToLine('upperBB', {timestamp: candle.timestamp, price: upper})
+    this.plotter.addPointToLine('SMA', {timestamp: candle.timestamp, price: smaVal})
 
     // Test if to open/close position
     if (!this.openPosId && candle.close > smaVal && candle.close < (lower + (candle.close * 0.1 / 100))) {
@@ -63,15 +65,6 @@ export class BbSmaStrategy {
       this.closePosition(candle)
     }
     console.log('Strategy finished.\nClosed', this.trades, 'positions\nFinal Balance:', Math.round(this.balance * 100) / 100)
-  }
-
-  getLinesToPlot() {
-    return [
-      this.smaLine.getLine(),
-      this.lowerBand.getLine(),
-      this.middleBand.getLine(),
-      this.upperBand.getLine()
-    ]
   }
 
   closePosition(candle) {

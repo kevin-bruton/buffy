@@ -1,5 +1,9 @@
 import {sma} from '../indicators/tulind.mjs'
 import trader from '../trader/index.mjs'
+/**
+ * This stragegy is using an old format, no longer valid
+ */
+
 
 let closeValues
 let counter

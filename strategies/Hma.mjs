@@ -3,14 +3,15 @@ import {LinePlot} from '../plotter/lines.mjs'
 // import {TrailingLongStop} from '../indicators/custom.mjs'
 
 export class HmaStrategy {
-  constructor(initialBalance, trader) {
+  constructor(initialBalance, trader, plotter) {
     this.closeValues = []
     this.trades = 0
     this.openPosId = 0
     this.balance = initialBalance
     this.trader = trader
+    this.plotter = plotter
     this.hmaSize = 14
-    this.hmaLine = new LinePlot({name: 'HMA', color: 'blue', strategy: this})
+    this.plotter.addLine('HMA', 'blue')
     this.diffPercentForBuy = 0.01
     // this.trailingStop = new TrailingLongStop({priceMargin: 50})
     console.log('Strategy init')
@@ -26,7 +27,7 @@ export class HmaStrategy {
     const hmaValues = await hma(this.hmaSize, this.closeValues)
     const currentHma = hmaValues[hmaValues.length - 1]
     const hmaDiffPercent = (currentHma - hmaValues[hmaValues.length - 2]) * 100 / candle.close
-    this.hmaLine.addPoint({timestamp: candle.timestamp, price: currentHma})
+    this.plotter.addPointToLine('HMA', {timestamp: candle.timestamp, price: currentHma})
 
     // Test if to open/close position
     if (!this.openPosId && (hmaDiffPercent > this.diffPercentForBuy)) {
@@ -41,7 +42,7 @@ export class HmaStrategy {
   async end (candle) {
     const hmaValues = await hma(50, this.closeValues)
     const currentHma = hmaValues[hmaValues.length - 1]
-    this.hmaLine.addPoint({timestamp: candle.timestamp, price: currentHma})
+    this.plotter.addPointToLine('HMA', {timestamp: candle.timestamp, price: currentHma})
     if (this.openPosId) {
       this.balance = this.trader.closePosition({positionId: this.openPosId, price: candle.close, timestamp: candle.timestamp})
       this.trades += 1

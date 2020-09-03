@@ -1,12 +1,11 @@
 import {ema} from '../indicators/tulind.mjs'
-import {LinePlot} from '../plotter/lines.mjs'
 // import {TrailingLongStop} from '../indicators/custom.mjs'
 
 const tendencyMeasure = 0.3
 const upTendency = (tPct1, tPct2, tPct3) => /* tPct1 > tendencyMeasure &&  */tPct2 > tendencyMeasure && tPct3 > tendencyMeasure
 
 export class ThreeEmaStrategy {
-  constructor(initialBalance, trader) {
+  constructor(initialBalance, trader, plotter) {
     this.closeValues = []
     this.trades = 0
     this.openPosId = 0
@@ -16,9 +15,10 @@ export class ThreeEmaStrategy {
     this.sEmaSize = 50
     this.mEmaSize = 100
     this.lEmaSize = 150
-    this.sEmaLine = new LinePlot({name: 'S EMA', color: 'orange', strategy: this})
-    this.mEmaLine = new LinePlot({name: 'M EMA', color: 'blue', strategy: this})
-    this.lEmaLine = new LinePlot({name: 'L EMA', color: 'red', strategy: this})
+    this.plotter = plotter
+    this.plotter.addLine('sEma', 'orange')
+    this.plotter.addLine('mEma', 'blue')
+    this.plotter.addLine('lEma', 'red')
     this.emasUpTendency = false
     this.readyToBuy = false
     // this.trailingStop = new TrailingLongStop({priceMargin: 50})
@@ -37,9 +37,9 @@ export class ThreeEmaStrategy {
     const sCurrentEma = await sEmaValues[sEmaValues.length - 1]
     const mCurrentEma = await mEmaValues[mEmaValues.length - 1]
     const lCurrentEma = await lEmaValues[lEmaValues.length - 1]
-    this.sEmaLine.addPoint({timestamp: candle.timestamp, price: sCurrentEma})
-    this.mEmaLine.addPoint({timestamp: candle.timestamp, price: mCurrentEma})
-    this.lEmaLine.addPoint({timestamp: candle.timestamp, price: lCurrentEma})
+    this.plotter.addPointToLine('sEma', {timestamp: candle.timestamp, price: sCurrentEma})
+    this.plotter.addPointToLine('mEma', {timestamp: candle.timestamp, price: mCurrentEma})
+    this.plotter.addPointToLine('lEma', {timestamp: candle.timestamp, price: lCurrentEma})
 
     const sEmaTendencyPercent = Math.round((sEmaValues[sEmaValues.length - 5] - sCurrentEma) / sEmaValues[sEmaValues.length - 5] * 10000) / 100
     const mEmaTendencyPercent = Math.round((sEmaValues[mEmaValues.length - 5] - mCurrentEma) / sEmaValues[mEmaValues.length - 5] * 10000) / 100
@@ -92,13 +92,5 @@ export class ThreeEmaStrategy {
     const finalBalance = Math.round(this.balance * 100) / 100
     console.log('Strategy finished.\nClosed', this.trades, 'positions\nFinal Balance:', finalBalance,
     `Profit: ${Math.round((finalBalance - this.initialBalance) * 10000 / this.initialBalance) / 100}%`)
-  }
-
-  getLinesToPlot() {
-    return [
-      this.sEmaLine.getLine(),
-      this.mEmaLine.getLine(),
-      this.lEmaLine.getLine()
-    ]
   }
 }

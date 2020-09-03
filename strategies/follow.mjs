@@ -3,6 +3,10 @@ import trader from '../trader/index.mjs'
 import {LinePlot} from '../plotter/lines.mjs'
 import {TrailingLongStop} from '../indicators/custom.mjs'
 
+
+/**
+ * Strategy with old format
+ */
 let closeValues
 let counter
 let trades
