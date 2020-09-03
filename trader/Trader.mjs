@@ -22,6 +22,10 @@ export class Trader {
 
   closePosition({positionId, price, timestamp}) {
     const posIndex = this.openPositions.findIndex(pos => pos.positionId === positionId)
+    if (posIndex === -1) {
+      console.log('Could not find the postitionId', positionId, 'to close it')
+      return this.currentBalance
+    }
     const position = this.openPositions[posIndex]
     this.openPositions = this.openPositions.slice(0, posIndex).concat(this.openPositions.slice(posIndex + 1))
     this.currentBalance = this.quantityType === 'Shares'
@@ -33,5 +37,9 @@ export class Trader {
 
   getTrades() {
     return this.trades
+  }
+
+  getPositionById(positionId) {
+    return this.openPositions.find(pos => pos.positionId === positionId)
   }
 }

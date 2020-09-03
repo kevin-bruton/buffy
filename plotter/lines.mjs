@@ -16,7 +16,9 @@ export class LinePlot {
    * @memberof LinePlot
    */
   addPoint(point) {
-    this.points.push(point)
+    if (point.price) {
+      this.points.push(point)
+    }
   }
 
   save() {

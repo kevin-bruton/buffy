@@ -5,38 +5,66 @@ import {TrailingLongStop} from '../indicators/custom.mjs'
 export class FollowMeStrategy {
   constructor(initialBalance, trader) {
     this.closeValues = []
-    this.counter = 0
     this.trades = 0
     this.openPosId = 0
     this.balance = initialBalance
     this.trader = trader
+    this.slowSmaSize = 50
+    this.fastSmaSize = 5
     this.slowSmaLine = new LinePlot({name: 'SlowSma', color: 'blue', strategy: this})
     this.fastSmaLine = new LinePlot({name: 'FastSma', color: 'orange', strategy: this})
-    this.trailingStop = new TrailingLongStop({priceMargin: 80})
+    this.trailingStop = new TrailingLongStop({priceMargin: 50})
     console.log('Strategy init')
   }
 
   async onTick (candle) {
-    let currentFastSma
     this.closeValues.push(candle.close)
-    if (this.closeValues.length >= 5) {
-      const fastSma = await sma(5, this.closeValues)
+    if (this.closeValues.length < this.slowSmaSize) {
+      return
+    }
+    
+    // Get SMAs
+    const fastSma = await sma(this.fastSmaSize, this.closeValues)
+    const currentFastSma = fastSma[fastSma.length - 1]
+    this.fastSmaLine.addPoint({timestamp: candle.timestamp, price: currentFastSma})
+    const slowSma = await sma(this.slowSmaSize, this.closeValues)
+    const currentSlowSma = slowSma[slowSma.length - 1]
+    this.slowSmaLine.addPoint({timestamp: candle.timestamp, price: currentSlowSma})
+
+    // Test if to open/close position
+    if (!this.openPosId && currentFastSma > currentSlowSma) {
+      this.openPosId = this.trader.openPosition({action: 'buy', price: candle.close, timestamp: candle.timestamp})
+    } else if (this.openPosId && (currentFastSma < currentSlowSma || this.trailingStop.shouldStop(candle.close))) {
+      this.balance = this.trader.closePosition({positionId: this.openPosId, price: candle.close, timestamp: candle.timestamp})
+      this.openPosId = 0
+      this.trades += 1
+    }
+    /* 
+    let fastSma
+    let currentFastSma
+    let previousFastSma
+    this.closeValues.push(candle.close)
+    if (this.closeValues.length >= this.fastSmaSize) {
+      fastSma = await sma(this.fastSmaSize, this.closeValues)
       currentFastSma = fastSma[fastSma.length - 1]
+      previousFastSma = fastSma[fastSma.length - 2]
       this.fastSmaLine.addPoint({timestamp: candle.timestamp, price: currentFastSma})
     }
-    if (this.closeValues.length >= 50) {
-      const slowSma = await sma(50, this.closeValues)
+    if (this.closeValues.length >= this.fastSmaSize) {
+      const slowSma = await sma(this.fastSmaSize, this.closeValues)
       const currentSlowSma = slowSma[slowSma.length - 1]
+      const previousSlowSma = slowSma[slowSma.length - 2]
       this.slowSmaLine.addPoint({timestamp: candle.timestamp, price: currentSlowSma})
-      if (!this.openPosId && currentFastSma > currentSlowSma) {
+      if (!this.openPosId &&  (previousSlowSma < currentSlowSma) && (previousFastSma < currentFastSma)) {
         this.openPosId = this.trader.openPosition({action: 'buy', price: candle.close, timestamp: candle.timestamp})
-      }
-      if (this.openPosId && (currentFastSma < currentSlowSma || this.trailingStop.shouldStop(candle.close))) {
+      } else if (this.openPosId && ( currentFastSma <= previousFastSma || currentSlowSma <= previousSlowSma)) {
+        // eslint-disable-next-line babel/no-unused-expressions
+        // this.trailingStop.shouldStop(candle.close) && console.log('STOP LOSS at ', candle.close, new Date(candle.timestamp))
         this.balance = this.trader.closePosition({positionId: this.openPosId, price: candle.close, timestamp: candle.timestamp})
         this.openPosId = 0
         this.trades += 1
       }
-    }
+    } */
   }
   
   async end (lastCandle) {
