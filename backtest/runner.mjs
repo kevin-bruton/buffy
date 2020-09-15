@@ -1,7 +1,8 @@
 import {getStrategy} from '../strategies/index.mjs'
 import {Trader} from '../trader/Trader.mjs'
-import {getCandles} from '../db/candles.mjs'
+import {get1mCandle} from '../db/candles.mjs'
 import { Plotter } from '../plotter/Plotter.mjs'
+import {printProgress} from '../utils/index.mjs'
 
 export {backTestRunner}
 
@@ -16,12 +17,10 @@ export {backTestRunner}
  * 
  * @param {BackTestDef} backTestDef
  */
-async function backTestRunner({provider, symbol, interval, from, to, strategy, quantity, quantityType, initialBalance}) {
-  console.log('Getting candles...')
-  const candles = getCandles(provider, symbol, from, to, interval)
+async function backTestRunner({provider, symbol, interval, fromTimestamp, toTimestamp, strategy, quantity, quantityType, initialBalance}, progressListener) {
 
   console.log('Getting strategy...')
-  const backTestDir = getBackTestId({provider, symbol, interval, from, to, strategy})
+  const backTestId = getBackTestId({provider, symbol, interval, fromTimestamp, toTimestamp, strategy})
 
   const trader = new Trader({
     mode: 'backtest',
@@ -29,27 +28,44 @@ async function backTestRunner({provider, symbol, interval, from, to, strategy, q
     provider,
     quantity,
     quantityType,
-    initialBalance,
-    tradeDir: backTestDir
+    initialBalance: Number(initialBalance)
   })
 
   const plotter =  new Plotter()
 
-  const strat = new (await getStrategy(strategy))(initialBalance, trader, plotter)
+  // Initialize strategy
+  const strat = new (await getStrategy(strategy))(trader, plotter)
 
-  for(let i = 0; i < candles.length; i += 1) {
-    const candle = candles[i]
-    // eslint-disable-next-line no-await-in-loop
-    await strat.onTick(candle)
+  let progressTime = fromTimestamp
+  const candles = []
+  while (progressTime < toTimestamp) {
+    const candle =  get1mCandle(provider, symbol, progressTime)
+    progressTime += 1000 * 60 // add one minute
+    if (candle) {
+      candles.push(candle)
+      plotter.setTimestamp(candle.timestamp)
+      // eslint-disable-next-line no-await-in-loop
+      await strat.onTick(candle, candles)
+      // eslint-disable-next-line no-await-in-loop
+      await progressListener({
+        candle,
+        pointsToAddToLines: plotter.getPointsToAddToLines(),
+        trades: trader.getTrades(),
+        balance: trader.balance
+      })
+      printProgress(fromTimestamp + progressTime, toTimestamp)
+    }
   }
 
-  await strat.end(candles[candles.length - 1])
-  const backTestId = backTestDir.split('/').pop()
+  strat.onEnd(candles[candles.length - 1], candles)
+  await progressListener({end: true, candle: candles[candles.length - 1], trades: trader.getTrades()})
+  console.log('')
+
   // TODO: add end time 
   return {
     backTestId,
     linesToPlot: plotter.getLinesToPlot(),
-    trades: trader.trades,
+    trades: trader.getTrades(),
     candles
   }
 }
@@ -58,20 +74,3 @@ function getBackTestId({provider, symbol, interval, from, to, strategy}) {
   const backTestId = `${strategy}_${provider}_${symbol}_${interval}_${from}_${to}`
   return backTestId
 }
-
-/* 
-CREATE TABLE backtests (
-    backTestId        CHAR (50)    PRIMARY KEY
-                                   UNIQUE
-                                   NOT NULL,
-    provider          CHAR (50)    NOT NULL,
-    symbol            CHAR (10)    NOT NULL,
-    startRunTimeStamp INTEGER (15) NOT NULL,
-    endRunTimeStamp   INTEGER (15),
-    linesToPlot       CHAR         NOT NULL
-                                   DEFAULT "[]",
-    openPositions     CHAR         NOT NULL
-                                   DEFAULT "[]"
-);
-
- */

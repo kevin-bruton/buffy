@@ -83,8 +83,8 @@ async function getCandlesForDay({startDate, symbol}) {
     symbol: 'CS.D.EURUSD.MINI.IP'
   }) */
   await importCandles({
-    startDate: (new Date('2020-07-31')).valueOf(),
-    endDate: (new Date('2020-08-01')).valueOf(),
+    startDate: (new Date('2020-08-01')).valueOf(),
+    endDate: (new Date('2020-09-01')).valueOf() - 1,
     symbol: 'CS.D.EURUSD.MINI.IP'
   })
   console.log('DONE!')

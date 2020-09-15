@@ -4,21 +4,33 @@ import {createIntervalCandles} from './intervalCandles.mjs'
 export {
   getAvailableCandles,
   getCandles,
+  get1mCandle,
   saveCandles
 }
 
 function getAvailableCandles(provider, symbol) {
   const db = dbOpen()
-  const result = dbGet(db, `SELECT min(timestamp), max(timestamp) FROM ${provider}_${symbol}_candles;`)
+  const result = dbGet(db, `SELECT min(timestamp), max(timestamp) FROM ${provider}_${symbol};`)
   dbClose(db)
   return {start: result['min(timestamp)'], end: result['max(timestamp)']}
+}
+
+function get1mCandle(provider, symbol, timeDateStr) {
+  const timestamp = (new Date(timeDateStr).valueOf())
+  const db = dbOpen()
+  const sql = 'SELECT timestamp, timeDate, open, close, high, low, volume '
+    + `FROM ${provider}_${symbol} WHERE timestamp=${timestamp};`
+  const candle1m = dbGet(db, sql)
+  dbClose(db)
+  return candle1m
 }
 
 function getCandles(provider, symbol, start, end, candleSize) {
   const db = dbOpen()
   const sql = 'SELECT timestamp, timeDate, open, close, high, low, volume '
-    + `FROM ${provider}_${symbol}_candles WHERE timestamp BETWEEN ${new Date(start).valueOf()} AND ${(new Date(end).valueOf()) - 1};`
+    + `FROM ${provider}_${symbol} WHERE timestamp BETWEEN ${new Date(start).valueOf()} AND ${(new Date(end).valueOf()) - 1};`
   const candles1m = dbAll(db, sql)
+  dbClose(db)
   
   // Make new candles with the specified candleSize
   const candleSizeInMinutes = {
@@ -38,10 +50,10 @@ function getCandles(provider, symbol, start, end, candleSize) {
 }
 
 function saveCandles(provider, symbol, candles) {
-  const tableName = `${provider}_${symbol}_candles`.replace(/\./g, '')
+  const tableName = `${provider}_${symbol}`.replace(/\./g, '')
   const db = dbOpen()
   
-  dbRun(db, `CREATE TABLE IF NOT EXISTS ${tableName}_candles (`
+  dbRun(db, `CREATE TABLE IF NOT EXISTS ${tableName} (`
     + 'timestamp INTEGER PRIMARY KEY,'
     + 'timeDate TEXT NOT NULL,'
     + 'open REAL NOT NULL,'
@@ -55,7 +67,7 @@ function saveCandles(provider, symbol, candles) {
     return `${acc},(${cur.timestamp},'${cur.timeDate}','${cur.open}','${cur.close}','${cur.high}','${cur.low}',${cur.volume})`
   }, '').substring(1)
   
-  dbRun(db, `INSERT INTO ${tableName}_candles(timestamp, timeDate, open, close, high, low, volume) VALUES ${values}`)
+  dbRun(db, `INSERT INTO ${tableName}(timestamp, timeDate, open, close, high, low, volume) VALUES ${values}`)
   dbClose(db)
 }
 

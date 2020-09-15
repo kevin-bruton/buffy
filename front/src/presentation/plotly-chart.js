@@ -20,23 +20,90 @@ class PlotlyChart extends LitElement {
   static get properties() {
     return {
       candles: { type: Array },
-      trades: { type: Array },
-      lines: { type: Array },
+      trades: { type: Object },
+      linesUpdate: { type: Object },
+      finished: { type: Boolean },
+      buyPlotX: { type: Array },
+      buyPlotY: { type: Array },
+      sellPlotX: { type: Array },
+      sellPloyY: { type: Array },
     };
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    Promise.resolve().then(() => {
-      this.candles = this.candles.map(candle => ({
+  constructor() {
+    super();
+    this._candles = [];
+    this.buyPlotX = [];
+    this.buyPlotY = [];
+    this.sellPlotX = [];
+    this.sellPlotY = [];
+    this.linesUpdate = {};
+    this.lines = {};
+  }
+
+  set candles(val) {
+    const oldVal = this._candles;
+    this._candles = val;
+    this.updateChart(val);
+    this.requestUpdate('candles', oldVal);
+  }
+
+  updated() {
+    this.updateChart(this._candles);
+  }
+
+  updateTrades() {
+    if (this.trades) {
+      Object.keys(this.trades).forEach(tradeType => {
+        this.trades[tradeType].forEach(trade => {
+          const x = new Date(trade.timestamp);
+          const y = trade.price;
+          if (trade.action === 'buy') {
+            this.buyPlotX.push(x);
+            this.buyPlotY.push(y);
+          } else if (trade.action === 'sell') {
+            this.sellPlotX.push(x);
+            this.sellPlotY.push(y);
+          }
+        });
+      });
+    }
+  }
+
+  updateLines() {
+    if (this.linesUpdate) {
+      Object.keys(this.linesUpdate).forEach(lineKey => {
+        if (!this.lines[lineKey]) {
+          this.lines[lineKey] = { color: this.linesUpdate[lineKey].color };
+        }
+        if (!this.lines[lineKey].x) {
+          this.lines[lineKey].x = [];
+        }
+        if (!this.lines[lineKey].y) {
+          this.lines[lineKey].y = [];
+        }
+        this.lines[lineKey].x.push(
+          new Date(this.linesUpdate[lineKey].timestamp)
+        );
+        this.lines[lineKey].y.push(this.linesUpdate[lineKey].price);
+      });
+    }
+  }
+
+  updateChart(candlesticks) {
+    this.updateTrades();
+    this.updateLines();
+    const chartEl = this.renderRoot.querySelector('#chart');
+    if (chartEl && candlesticks.length && this.finished) {
+      const candles = candlesticks.map(candle => ({
         ...candle,
         ...{ timeDate: new Date(candle.timestamp) },
       }));
-      const x = this.candles.map(candle => candle.timeDate);
-      const open = this.candles.map(candle => candle.open);
-      const close = this.candles.map(candle => candle.close);
-      const high = this.candles.map(candle => candle.high);
-      const low = this.candles.map(candle => candle.low);
+      const x = candles.map(candle => candle.timeDate);
+      const open = candles.map(candle => candle.open);
+      const close = candles.map(candle => candle.close);
+      const high = candles.map(candle => candle.high);
+      const low = candles.map(candle => candle.low);
       const candlePlot = {
         name: 'Candles',
         x,
@@ -52,12 +119,10 @@ class PlotlyChart extends LitElement {
         yaxis: 'y',
       };
 
-      const buys = this.trades.filter(trade => trade.action === 'buy');
-      const sells = this.trades.filter(trade => trade.action === 'sell');
       const buyPlot = {
         type: 'scatter',
-        x: buys.map(trade => new Date(trade.timestamp)),
-        y: buys.map(trade => trade.price),
+        x: this.buyPlotX,
+        y: this.buyPlotY,
         mode: 'markers',
         name: 'Buys',
         marker: {
@@ -72,8 +137,8 @@ class PlotlyChart extends LitElement {
       };
       const sellPlot = {
         type: 'scatter',
-        x: sells.map(trade => new Date(trade.timestamp)),
-        y: sells.map(trade => trade.price),
+        x: this.sellPlotX,
+        y: this.sellPlotY,
         mode: 'markers',
         name: 'Sells',
         marker: {
@@ -87,13 +152,14 @@ class PlotlyChart extends LitElement {
         },
       };
 
-      const linesPlot = this.lines.map(line => ({
+      const linesPlot = Object.keys(this.lines).map(key => ({
         mode: 'lines',
-        name: line.name,
-        line: { color: line.color },
-        x: line.points.map(point => new Date(point.timestamp)),
-        y: line.points.map(point => point.price),
+        name: key,
+        line: { color: this.lines[key].color },
+        x: this.lines[key].x,
+        y: this.lines[key].y,
       }));
+
       const data = [candlePlot, buyPlot, sellPlot, ...linesPlot];
       const layout = {
         autosize: true,
@@ -109,10 +175,7 @@ class PlotlyChart extends LitElement {
         xaxis: {
           autorange: true,
           domain: [0, 1],
-          range: [
-            this.candles[0].timeDate,
-            this.candles[this.candles.length - 1].timeDate,
-          ],
+          range: [candles[0].timeDate, candles[candles.length - 1].timeDate],
           rangeslider: { visible: false },
           title: 'Date',
           type: 'date',
@@ -133,13 +196,8 @@ class PlotlyChart extends LitElement {
         displayModeBar: 'hover',
         scrollZoom: true,
       };
-      Plotly.newPlot(
-        this.renderRoot.querySelector('#chart'),
-        data,
-        layout,
-        config
-      );
-    });
+      Plotly.react(chartEl, data, layout, config);
+    }
   }
 
   render() {
