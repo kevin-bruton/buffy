@@ -32,7 +32,7 @@
     "url": "https://github.com/wagerfield/ig-api/issues"
   },
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.21.1",
     "pidcrypt": "^0.0.31",
     "rambda": "^0.9.0"
   },
