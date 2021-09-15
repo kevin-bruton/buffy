@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit-element';
+import { getIntervalInMillisecs } from '../services/utils.mjs';
 
 class ProgressBar extends LitElement {
   static get styles() {
@@ -31,32 +32,25 @@ class ProgressBar extends LitElement {
       start: { type: Number },
       end: { type: Number },
       current: { type: Number },
+      interval: { type: String },
       show: { type: Boolean, attribute: false },
+      currentPercentage: { type: Number, attribute: false },
     };
-  }
-
-  constructor() {
-    super();
-    this.currentPercentage = 0;
-    this._current = 0;
-    this.style.setProperty('--progress-percentage', '0%');
   }
 
   connectedCallback() {
     super.connectedCallback();
-    Promise.resolve().then(() => {
-      this.currentPercentage = 0;
-      this._current = 0;
-      this.style.setProperty('--progress-percentage', '0%');
-      this.show = true;
-    });
+    this.currentPercentage = 0;
+    this._current = 0;
+    this.style.setProperty('--progress-percentage', '0%');
+    this.show = true;
   }
 
   set current(val) {
     const oldVal = this._current;
-    this._current = val;
+    this._current = val + getIntervalInMillisecs(this.interval);
     this.currentPercentage = Math.round(
-      ((val - this.start) / (this.end - this.start)) * 100
+      ((this._current - this.start) / (this.end - this.start)) * 100
     );
     if (this.currentPercentage === 100) {
       setTimeout(() => {

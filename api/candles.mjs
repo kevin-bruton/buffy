@@ -1,5 +1,5 @@
 import express from 'express'
-import {getAvailableCandles, getCandles} from '../db/candles.mjs'
+import {getAvailableCandles, getIntervalCandles} from '../db/candles.mjs'
 
 const router = express.Router()
 
@@ -23,7 +23,7 @@ router.get('/:provider/:symbol/:candlesize/:start/:end', (req, res) => {
     if (!provider || !symbol || !candlesize || !start || !end) {
       throw new Error()
     }
-    const candles = getCandles(provider, symbol, start, end, candlesize)
+    const candles = getIntervalCandles(provider, symbol, start, end, candlesize)
     res.json(candles)
   } catch(error) {  
     res.json({error})

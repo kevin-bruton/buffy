@@ -1,10 +1,26 @@
 import {getStrategy} from '../strategies/index.mjs'
 import {Trader} from '../trader/Trader.mjs'
-import {get1mCandle} from '../db/candles.mjs'
+import {getIntervalCandle} from '../db/candles.mjs'
 import { Plotter } from '../plotter/Plotter.mjs'
 import {printProgress} from '../utils/index.mjs'
 
 export {backTestRunner}
+
+const getIntervalInMinutes = interval => ({
+  '1m': 1,
+  '5m': 5,
+  '15m': 15,
+  '30m': 30,
+  '1h': 60,
+  '2h': 60,
+  '3h': 3 * 60,
+  '4h': 4 * 60,
+  '6h': 6 * 60,
+  '12h': 12 * 60,
+  '1D': 24 * 60,
+  '7D': 7 * 24 * 60,
+  '14D': 14 * 24 * 60
+}[interval])
 
 /**
  * @typedef BackTestDef
@@ -38,9 +54,9 @@ async function backTestRunner({provider, symbol, interval, fromTimestamp, toTime
 
   let progressTime = fromTimestamp
   const candles = []
-  while (progressTime < toTimestamp) {
-    const candle =  get1mCandle(provider, symbol, progressTime)
-    progressTime += 1000 * 60 // add one minute
+  while (progressTime <= toTimestamp) {
+    const candle =  getIntervalCandle(provider, symbol, progressTime, interval)
+    progressTime += getIntervalInMinutes(interval) * 1000 * 60
     if (candle) {
       candles.push(candle)
       plotter.setTimestamp(candle.timestamp)
@@ -62,12 +78,12 @@ async function backTestRunner({provider, symbol, interval, fromTimestamp, toTime
   console.log('')
 
   // TODO: add end time 
-  return {
+  /* return {
     backTestId,
     linesToPlot: plotter.getLinesToPlot(),
     trades: trader.getTrades(),
     candles
-  }
+  } */
 }
 
 function getBackTestId({provider, symbol, interval, from, to, strategy}) {

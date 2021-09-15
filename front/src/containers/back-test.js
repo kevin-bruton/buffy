@@ -21,6 +21,7 @@ class BackTest extends LitElement {
       state: { type: String, attribute: false },
       candles: { type: Array, attribute: false },
       finished: { type: Boolean, attribute: false },
+      interval: { type: String, attribute: false },
     };
   }
 
@@ -39,6 +40,7 @@ class BackTest extends LitElement {
     let backTestResult;
     const backTestDefn = e.detail;
     this.initialBalance = Number(backTestDefn.initialBalance);
+    this.interval = backTestDefn.interval;
     this.state = STATE.LOADING;
 
     try {
@@ -73,21 +75,22 @@ class BackTest extends LitElement {
 
   render() {
     return {
-      [STATE.SELECT_TEST]: html` <backtest-selector
+      [STATE.SELECT_TEST]: html`<backtest-selector
         @runBackTest="${this.runBackTest}"
       ></backtest-selector>`,
-      [STATE.LOADING]: html`
-        <loading-spinner></loading-sspinner>`,
-      [STATE.LOADED]: html` <plotly-chart
+      [STATE.LOADING]: html`<loading-spinner></loading-sspinner>`,
+      [STATE.LOADED]: html`<plotly-chart
           .candles="${this.candles}"
           .trades="${this.trades}"
           .linesUpdate="${this.lines}"
           .finished="${this.finished}"
-        ></plotly-chart>
+        >
+        </plotly-chart>
         <progress-bar
           .start="${this.start}"
           .end="${this.end}"
           .current="${this.currentCandleTime}"
+          .interval="${this.interval}"
         >
         </progress-bar>
         <test-results
@@ -95,13 +98,9 @@ class BackTest extends LitElement {
           .trades="${this.trades}"
           .numCandles="${this.candles.length}"
           .finished="${this.finished}"
-        ></test-results>`,
+        >
+        </test-results>`,
     }[this.state];
-    /* <!-- <buffy-chart
-      .candles="${this.candles}"
-      .trades="${this.trades}"
-      .lines="${this.lines}"
-    ></buffy-chart> --> */
   }
 }
 

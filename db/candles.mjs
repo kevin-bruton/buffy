@@ -3,10 +3,27 @@ import {createIntervalCandles} from './intervalCandles.mjs'
 
 export {
   getAvailableCandles,
-  getCandles,
+  getIntervalCandles,
+  getIntervalCandle,
   get1mCandle,
   saveCandles
 }
+// Convert interval string specification to number of minutes
+const getIntervalInMinutes = interval => ({
+  '1m': 1,
+  '5m': 5,
+  '15m': 15,
+  '30m': 30,
+  '1h': 60,
+  '2h': 60,
+  '3h': 3 * 60,
+  '4h': 4 * 60,
+  '6h': 6 * 60,
+  '12h': 12 * 60,
+  '1D': 24 * 60,
+  '7D': 7 * 24 * 60,
+  '14D': 14 * 24 * 60
+}[interval])
 
 function getAvailableCandles(provider, symbol) {
   const db = dbOpen()
@@ -15,8 +32,7 @@ function getAvailableCandles(provider, symbol) {
   return {start: result['min(timestamp)'], end: result['max(timestamp)']}
 }
 
-function get1mCandle(provider, symbol, timeDateStr) {
-  const timestamp = (new Date(timeDateStr).valueOf())
+function get1mCandle(provider, symbol, timestamp) {
   const db = dbOpen()
   const sql = 'SELECT timestamp, timeDate, open, close, high, low, volume '
     + `FROM ${provider}_${symbol} WHERE timestamp=${timestamp};`
@@ -25,28 +41,35 @@ function get1mCandle(provider, symbol, timeDateStr) {
   return candle1m
 }
 
-function getCandles(provider, symbol, start, end, candleSize) {
+function getIntervalCandle(provider, symbol, timestamp, interval) {
+  const intervalInMinutes = getIntervalInMinutes(interval)
+  const last1mCandleTimestamp = timestamp + (intervalInMinutes * 60 * 1000)
+  const db = dbOpen()
+  const candles1m = dbAll(db, `SELECT timestamp, timeDate, open, close, high, low, volume `
+    + `FROM ${provider}_${symbol} WHERE timestamp BETWEEN ${timestamp} AND ${last1mCandleTimestamp};`)
+  dbClose(db)
+  if (!candles1m.length) {
+    return
+  }
+  const intervalCandle = candles1m.reduce((acc, cur) => ({
+    timestamp: acc.timestamp,
+    open: acc.open,
+    close: cur.close,
+    low: Math.min(acc.low, cur.low),
+    high: Math.max(acc.high, cur.high),
+    volume: acc.volume + cur.volume
+  }))
+  return intervalCandle
+}
+
+function getIntervalCandles(provider, symbol, start, end, candleSize) {
   const db = dbOpen()
   const sql = 'SELECT timestamp, timeDate, open, close, high, low, volume '
     + `FROM ${provider}_${symbol} WHERE timestamp BETWEEN ${new Date(start).valueOf()} AND ${(new Date(end).valueOf()) - 1};`
   const candles1m = dbAll(db, sql)
   dbClose(db)
   
-  // Make new candles with the specified candleSize
-  const candleSizeInMinutes = {
-    '1m': 1,
-    '5m': 5,
-    '15m': 15,
-    '30m': 30,
-    '1h': 60,
-    '3h': 3 * 60,
-    '6h': 6 * 60,
-    '12h': 12 * 60,
-    '1D': 24 * 60,
-    '7D': 7 * 24 * 60,
-    '14D': 14 * 24 * 60
-  }[candleSize]
-  return createIntervalCandles(candles1m, candleSizeInMinutes)
+  return createIntervalCandles(candles1m, getIntervalInMinutes(candleSize))
 }
 
 function saveCandles(provider, symbol, candles) {

@@ -177,7 +177,6 @@ class PlotlyChart extends LitElement {
           domain: [0, 1],
           range: [candles[0].timeDate, candles[candles.length - 1].timeDate],
           rangeslider: { visible: false },
-          title: 'Date',
           type: 'date',
         },
         yaxis: {

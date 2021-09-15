@@ -1,17 +1,7 @@
 import { LitElement, html, css } from 'lit-element';
 import * as dateFns from 'date-fns';
+import { to2dec } from '../services/utils.mjs';
 
-const to2dec = num => {
-  let dec2 = String(Math.round(num * 100) / 100);
-  if (dec2.indexOf('.') === -1) {
-    dec2 += '.';
-  }
-  const numDecimalsToAdd = 2 - dec2.substring(dec2.indexOf('.') + 1).length;
-  for (let i = 0; i < numDecimalsToAdd; i += 1) {
-    dec2 += '0';
-  }
-  return dec2;
-};
 const toDays = timeMillisecs => timeMillisecs / 1000 / 60 / 60 / 24;
 const oneYearMillisecs = 1000 * 60 * 60 * 24 * 365;
 
@@ -79,6 +69,10 @@ class TestResults extends LitElement {
     this.grossProfit = 0;
     this.grossLoss = 0;
     this.maxDrawdown = 0;
+    this.winRate = 0;
+    this.profitFactor = 0;
+    this.annualizedReturnPercentage = 0;
+    this.tradeTime = 0;
   }
 
   set trades(val) {
